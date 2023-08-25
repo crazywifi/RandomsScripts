@@ -37,6 +37,7 @@ echo "Domain,Port,NotBefore,NotAfter,Status" > "$csv_output_file"
 
 # Read domain and port pairs from the input file and process each one
 while IFS=: read -r domain port; do
+    echo "Checking certificate for: $domain"
     result=$(check_certificate "$domain" "$port")
     echo "$result" >> "$csv_output_file"
 done < "$input_file"
