@@ -9,6 +9,7 @@ local table = require "table"
 local tls = require "tls"
 local unicode = require "unicode"
 local have_openssl, openssl = pcall(require, "openssl")
+local os = require "os"
 
 description = [[
 Retrieves a server's SSL certificate. The amount of information printed
@@ -149,7 +150,10 @@ function date_to_string(date)
   if type(date) == "string" then
     return string.format("Can't parse; string is \"%s\"", date)
   else
-    return datetime.format_timestamp(date)
+	local startIndex = 0  -- Start index of the substring
+	local endIndex = 10
+	return string.sub(datetime.format_timestamp(date), startIndex, endIndex)
+    
   end
 end
 
@@ -268,14 +272,33 @@ local function output_str(cert)
     return "OpenSSL required to parse certificate.\n" .. cert.pem
   end
   local lines = {}
-
+  local notBefore = cert.validity.notBefore
+  local notAfter = cert.validity.notAfter
+  local current_time = os.time()
+  
+  
+  
+  notBefore1 = date_to_string(cert.validity.notBefore)
+  notAfter1 = date_to_string(cert.validity.notAfter)
+  current_time_1 =  date_to_string(current_time)
+  
+ 
+  local currenttime2 = os.time{year=tonumber(current_time_1:sub(1, 4)), month=tonumber(current_time_1:sub(6, 7)), day=tonumber(current_time_1:sub(9, 10))}
+  local notAfter2 = os.time{year=tonumber(notAfter1:sub(1, 4)), month=tonumber(notAfter1:sub(6, 7)), day=tonumber(notAfter1:sub(9, 10))}
   
 
-
   lines[#lines + 1] = "Not valid before: " ..
-  date_to_string(cert.validity.notBefore)
+  notBefore1
   lines[#lines + 1] = "Not valid after:  " ..
-  date_to_string(cert.validity.notAfter)
+  notAfter1
+  lines[#lines + 1] = "Current Time: " ..
+  current_time_1
+  if notAfter2 > currenttime2 then
+	lines[#lines + 1] = "Not Expired" 
+  else
+    lines[#lines + 1] = "Expired"
+  end
+  
 
 
   if nmap.verbosity() > 1 then
@@ -291,8 +314,7 @@ action = function(host, port)
     stdnse.debug1("getCertificate error: %s", cert or "unknown")
     return
   end
-
+  
   return output_tab(cert), output_str(cert)
 end
-
 
