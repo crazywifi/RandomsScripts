@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#input file: abc.com:443
 # Specify input and output file names
 input_file="domain_port_file.txt"
 csv_output_file="scan_output.csv"
